@@ -4,7 +4,7 @@
 #include "printVec.h"
 
 template<typename Comparable>
-void quickSortUnstableRec(vector<Comparable> &vec, int startIndex, int endIndex, Comparable& partition, int& i, int& largerElementIndex, Comparable& temp, unsigned long& reads, unsigned long& allocations) {
+void quickSortUnstableRec(vector<Comparable> &vec, int startIndex, int endIndex, Comparable& partition, int& i, int& largerElementIndex, Comparable& temp, unsigned long& reads, unsigned long& allocations) { // No allocations, all passed by reference
     // Recursive base case
     if (startIndex >= endIndex) {
         return;
@@ -17,20 +17,23 @@ void quickSortUnstableRec(vector<Comparable> &vec, int startIndex, int endIndex,
     // Keep track of where the > partition elements start
     largerElementIndex = startIndex+1;
     for (i = startIndex+1; i <= endIndex; ++i) {
-        if (vec[i] <= partition) {
+        if (vec[i] <= partition) { // 1 Read
             // Swap the smaller/equal item to the left of the larger items
-            temp = vec[i];
-            vec[i] = vec[largerElementIndex];
+            temp = vec[i]; // 1 Read
+            vec[i] = vec[largerElementIndex]; // 1 Read
             vec[largerElementIndex] = temp;
             // Update largerElementIndex
             ++largerElementIndex;
+            reads += 2;
         }
+        ++reads;
     }
     // Swap the partition element into place
     if (startIndex != largerElementIndex-1) {
-        temp = vec[startIndex];
-        vec[startIndex] = vec[largerElementIndex - 1];
+        temp = vec[startIndex]; // 1 Read
+        vec[startIndex] = vec[largerElementIndex - 1]; // 1 Read
         vec[largerElementIndex - 1] = temp;
+        reads += 2;
     }
 
     // Recursive calls for two halves
@@ -41,8 +44,9 @@ void quickSortUnstableRec(vector<Comparable> &vec, int startIndex, int endIndex,
 template<typename Comparable>
 vector<Comparable> quickSortUnstable(vector<Comparable> vec, unsigned long& reads, unsigned long& allocations) {
     reads = allocations = 0;
-    Comparable partition, temp;
-    int i, largerElementIndex;
+    Comparable partition, temp; // Allocate 2 Comparable
+    int i, largerElementIndex; // Allocate 2 int
+    allocations += 2 * sizeof(Comparable) + 2 * sizeof(int);
     quickSortUnstableRec(vec, 0, vec.size() - 1, partition, i, largerElementIndex, temp, reads, allocations);
     return vec;
 }
@@ -57,16 +61,18 @@ void quickSortStableRec(vector<Comparable> &vec, unsigned long& reads, unsigned 
     // Choose a partition element
     partition = vec[0];
 
-    vector<Comparable> smaller, equal, larger;
+    vector<Comparable> smaller, equal, larger; // No immediate allocations
     // Loop through vec and populate smaller, equal, larger
     for (i = 0; i < vec.size(); ++i) {
-        if (vec[i] < partition) {
-            smaller.push_back(vec[i]);
-        } else if (vec[i] > partition) {
-            larger.push_back(vec[i]);
+        if (vec[i] < partition) { // 1 Read
+            smaller.push_back(vec[i]); // Allocate 1 Comparable
+        } else if (vec[i] > partition) { // 1 Read
+            larger.push_back(vec[i]); // Allocate 1 Comparable
         } else {
-            equal.push_back(vec[i]);
+            equal.push_back(vec[i]); // Allocate 1 Comparable
         }
+        reads += 2;
+        allocations += sizeof(Comparable);
     }
 
     // Recursive calls
@@ -86,10 +92,11 @@ void quickSortStableRec(vector<Comparable> &vec, unsigned long& reads, unsigned 
 }
 
 template<typename Comparable>
-vector<Comparable> quickSortStable(vector<Comparable> vec, unsigned long& reads, unsigned long& allocations) {
+vector<Comparable> quickSortStable(vector<Comparable> vec, unsigned long& reads, unsigned long& allocations) { // No immediate allocations
     reads = allocations = 0;
-    Comparable partition;
-    int i;
+    Comparable partition; // Allocate 1 Comparable
+    int i; // Allocate 1 int
+    allocations += sizeof(Comparable) + sizeof(int);
     quickSortStableRec(vec, reads, allocations, partition, i);
     return vec;
 }
